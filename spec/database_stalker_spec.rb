@@ -21,8 +21,8 @@ describe DatabaseStalker do
     let(:test_log_path) { 'spec/fixture/test.log' }
     let(:table_log_path) { 'spec/fixture/table.log' }
 
-    context 'テストが正常終了' do
-      it do
+    context 'test process ends as normal' do
+      it 'table log is empty' do
         allow(Process).to receive(:detach).and_return(ThreadStub.new)
         described_class.start(test_log_path, table_log_path)
         File.open(test_log_path, 'w') do |f|
