@@ -1,12 +1,5 @@
 require "spec_helper"
 
-
-class ThreadStub
-  def status
-    false
-  end
-end
-
 describe DatabaseStalker do
   context 'version' do
     it { expect(DatabaseStalker::VERSION).not_to be nil }
@@ -23,7 +16,7 @@ describe DatabaseStalker do
 
     context 'test process ends as normal' do
       it 'table log is empty' do
-        allow(Process).to receive(:detach).and_return(ThreadStub.new)
+        allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
         File.open(test_log_path, 'w') do |f|
               log = <<-EOS
