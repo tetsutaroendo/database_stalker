@@ -21,7 +21,7 @@ module DatabaseStalker
 
     def watch_test_process
       while true
-        return if  Process.ppid == 1
+        return if Process.ppid == 1
       end
     end
   end
