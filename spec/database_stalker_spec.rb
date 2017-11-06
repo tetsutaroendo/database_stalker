@@ -14,34 +14,16 @@ describe DatabaseStalker do
     let(:test_log_path) { 'spec/fixture/test.log' }
     let(:table_log_path) { 'spec/fixture/table.log' }
 
-    context 'テストで複数のテーブルを使う' do
-      it do
-        allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(test_log_path, table_log_path)
-        log = <<-EOS
+    it do
+      allow(Process).to receive(:ppid).and_return(1)
+      described_class.start(test_log_path, table_log_path)
+      log = <<-EOS
   [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples1` (`id`) VALUES (1)
   [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples2` (`id`) VALUES (1)
-        EOS
-        simulate_db_operation(test_log_path, log)
-        simulate_test_process_dies
-        expect(table_names_from_log(table_log_path)).to eq(['examples1', 'examples2'])
-      end
-    end
-
-    context '無視する行を含む' do
-      it do
-        allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(test_log_path, table_log_path)
-        log = <<-EOS
-  [1m[35m (0.2ms)[0m  BEGIN
-  [1m[36m (0.1ms)[0m  [1mSAVEPOINT active_record_1[0m
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
-  [1m[36m (0.1ms)[0m  [1mRELEASE SAVEPOINT active_record_1[0m
-        EOS
-        simulate_db_operation(test_log_path, log)
-        simulate_test_process_dies
-        expect(table_names_from_log(table_log_path)).to eq(['examples'])
-      end
+      EOS
+      simulate_db_operation(test_log_path, log)
+      simulate_test_process_dies
+      expect(table_names_from_log(table_log_path)).to eq(['examples1', 'examples2'])
     end
 
     after do
