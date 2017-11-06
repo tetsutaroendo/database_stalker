@@ -23,7 +23,7 @@ describe DatabaseStalker do
   [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples2` (`id`) VALUES (1)
         EOS
         simulate_db_operation(test_log_path, log)
-        wait_for_process_lifecicle
+        simulate_test_process_dies
         expect(table_names_from_log(table_log_path)).to eq(['examples1', 'examples2'])
       end
     end
@@ -56,7 +56,7 @@ describe DatabaseStalker do
       File.delete(file_path) if File.exists?(file_path)
     end
 
-    def wait_for_process_lifecicle
+    def simulate_test_process_dies
       sleep(2)
     end
 end
