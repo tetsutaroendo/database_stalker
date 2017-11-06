@@ -7,7 +7,7 @@ describe DatabaseStalker::Parser do
   before { clean_up_file(test_log_path) }
 
   subject do
-    simulate_db_operation(test_log_path, log)
+    write_file(test_log_path, log)
     parser = described_class.new(test_log_path)
     parser.table_names
   end
@@ -37,16 +37,4 @@ describe DatabaseStalker::Parser do
   end
 
   after { clean_up_file(test_log_path) }
-
-  private
-
-    def simulate_db_operation(log_path, log)
-      File.open(log_path, 'w') do |f|
-        f.puts log
-      end
-    end
-
-    def clean_up_file(file_path)
-      File.delete(file_path) if File.exists?(file_path)
-    end
 end

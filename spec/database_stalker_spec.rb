@@ -35,9 +35,7 @@ describe DatabaseStalker do
   private
 
     def simulate_db_operation(log_path, log)
-      File.open(log_path, 'w') do |f|
-        f.puts log
-      end
+      write_file(log_path, log)
     end
 
     def table_names_from_log(log_path)
@@ -48,10 +46,6 @@ describe DatabaseStalker do
         end
       end
       result
-    end
-
-    def clean_up_file(file_path)
-      File.delete(file_path) if File.exists?(file_path)
     end
 
     def simulate_test_process_dies
