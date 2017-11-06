@@ -26,14 +26,7 @@ describe DatabaseStalker do
             f.puts log
         end
         wait_for_process_lifecicle
-
-        result = []
-        File.open(table_log_path, 'r') do |f|
-          f.each_line do |line|
-            result << line.strip
-          end
-        end
-        expect(result).to eq(['examples1', 'examples2'])
+        expect(table_names_from_log(table_log_path)).to eq(['examples1', 'examples2'])
       end
     end
 
@@ -44,6 +37,16 @@ describe DatabaseStalker do
   end
 
   private
+
+    def table_names_from_log(log_path)
+      result = []
+      File.open(log_path, 'r') do |f|
+        f.each_line do |line|
+          result << line.strip
+        end
+      end
+      result
+    end
 
     def clean_up_file(file_path)
       File.delete(file_path) if File.exists?(file_path)
