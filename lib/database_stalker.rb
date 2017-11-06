@@ -1,4 +1,5 @@
 require "database_stalker/version"
+require "database_stalker/parser"
 
 module DatabaseStalker
 
@@ -7,15 +8,9 @@ module DatabaseStalker
       while true
         break if Process.ppid == 1
       end
-      tables = []
-      File.open(log_file, 'r') do |f|
-        f.each_line do |line|
-          matched = line.match(/INSERT\ INTO\ `(.+)` \(/)
-          tables << matched[1] unless matched.nil?
-        end
-      end
       File.open(table_log_file, 'w') do |f|
-        tables.each { |table| f.puts table }
+        parser = Parser.new(log_file)
+        parser.table_names.each { |table| f.puts table }
       end
     end
   end

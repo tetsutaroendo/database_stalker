@@ -29,7 +29,6 @@ describe DatabaseStalker do
     end
 
     context '無視する行を含む' do
-
       it do
         allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
