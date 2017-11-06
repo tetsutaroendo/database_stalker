@@ -7,9 +7,9 @@ module DatabaseStalker
       while true
         break if Process.ppid == 1
       end
+      tables = ['examples1', 'examples2']
       File.open(table_log_file, 'w') do |f|
-        f.puts 'examples1'
-        f.puts 'examples2'
+        tables.each { |table| f.puts table }
       end
     end
   end
