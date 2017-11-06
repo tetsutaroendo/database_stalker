@@ -20,7 +20,8 @@ describe DatabaseStalker do
         described_class.start(test_log_path, table_log_path)
         File.open(test_log_path, 'w') do |f|
               log = <<-EOS
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples1` (`id`) VALUES (1)
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples2` (`id`) VALUES (1)
               EOS
             f.puts log
         end
@@ -32,7 +33,7 @@ describe DatabaseStalker do
             result << line.strip
           end
         end
-        expect(result).to eq(['examples'])
+        expect(result).to eq(['examples1', 'examples2'])
       end
     end
 
