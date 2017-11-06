@@ -1,4 +1,4 @@
-class Parser
+class DatabaseStalker::Parser
   def initialize(log_file)
     @log_file = log_file
   end
