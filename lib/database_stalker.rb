@@ -11,8 +11,7 @@ module DatabaseStalker
       File.open(log_file, 'r') do |f|
         f.each_line do |line|
           matched = line.match(/INSERT\ INTO\ `(.+)` \(/)
-          tables << matched[1]
-          #tables << matched[1] unless matched.nil?
+          tables << matched[1] unless matched.nil?
         end
       end
       File.open(table_log_file, 'w') do |f|
