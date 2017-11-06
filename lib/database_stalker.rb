@@ -8,6 +8,7 @@ module DatabaseStalker
         break if Process.ppid == 1
       end
       File.open(table_log_file, 'w') do |f|
+        f.puts 'examples'
       end
     end
   end

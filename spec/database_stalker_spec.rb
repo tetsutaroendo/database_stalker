@@ -15,23 +15,24 @@ describe DatabaseStalker do
     let(:table_log_path) { 'spec/fixture/table.log' }
 
     context 'test process ends as normal' do
-      it 'table log is empty' do
+      it do
         allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
         File.open(test_log_path, 'w') do |f|
               log = <<-EOS
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples1` (`id`) VALUES (1)
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
               EOS
             f.puts log
         end
         wait_for_process_lifecicle
-        result = nil
+
+        result = []
         File.open(table_log_path, 'r') do |f|
           f.each_line do |line|
-            result = line
+            result << line.strip
           end
         end
-        expect(result).to be_nil
+        expect(result).to eq(['examples'])
       end
     end
 
