@@ -32,7 +32,7 @@ describe DatabaseStalker do
           $stderr = File.open("/dev/null", "w")
           crash # simulate test process dies
         end
-        sleep(2)
+        wait_test_process_simulation
         expect(File.exists?(table_log_path)).to be_truthy
       end
     end
@@ -63,6 +63,10 @@ describe DatabaseStalker do
     end
 
     def simulate_test_process_dies
+      sleep(2)
+    end
+
+    def wait_test_process_simulation
       sleep(2)
     end
 end
