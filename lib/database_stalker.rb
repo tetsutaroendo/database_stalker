@@ -6,11 +6,15 @@ module DatabaseStalker
   class  << self
 
     def start(log_file, table_log_file)
-      File.open(log_file,'w'){ |f| f = nil }
+      clean_up_file(log_file)
       Process.fork do
         watch_test_process
         save_stalked_tables(log_file, table_log_file)
       end
+    end
+
+    def clean_up_file(file)
+      File.open(file,'w'){ |f| f = nil }
     end
 
     def save_stalked_tables(log_file, table_log_file)
@@ -27,5 +31,5 @@ module DatabaseStalker
     end
   end
 
-  private_class_method :save_stalked_tables, :watch_test_process
+  private_class_method :save_stalked_tables, :watch_test_process, :clean_up_file
 end
