@@ -18,13 +18,9 @@ describe DatabaseStalker do
       it do
         allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
-        log = <<-EOS
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples1` (`id`) VALUES (1)
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples2` (`id`) VALUES (1)
-        EOS
-        simulate_db_operation(test_log_path, log)
+        simulate_db_operation(test_log_path)
         simulate_test_process_dies
-        expect(table_names_from_log(table_log_path)).to eq(['examples1', 'examples2'])
+        expect(File.exists?(table_log_path)).to be_truthy
       end
     end
 
@@ -32,10 +28,7 @@ describe DatabaseStalker do
       it do
         Process.fork do
           described_class.start(test_log_path, table_log_path)
-          log = <<-EOS
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
-          EOS
-          simulate_db_operation(test_log_path, log)
+          simulate_db_operation(test_log_path)
           $stderr = File.open("/dev/null", "w")
           crash # simulate test process dies
         end
@@ -52,7 +45,10 @@ describe DatabaseStalker do
 
   private
 
-    def simulate_db_operation(log_path, log)
+    def simulate_db_operation(log_path)
+      log = <<-EOS
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
+      EOS
       write_file(log_path, log)
     end
 
