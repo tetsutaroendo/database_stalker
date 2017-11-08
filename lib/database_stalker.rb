@@ -6,7 +6,7 @@ module DatabaseStalker
   class  << self
 
     def start(log_file, table_log_file)
-      clean_up_file(log_file)
+      clean_up_file(log_file) if File.exist?(log_file)
       Process.fork do
         watch_test_process
         save_stalked_tables(log_file, table_log_file)
@@ -19,8 +19,12 @@ module DatabaseStalker
 
     def save_stalked_tables(log_file, table_log_file)
       File.open(table_log_file, 'w') do |f|
-        parser = Parser.new(log_file)
-        parser.table_names.each { |table| f.puts table }
+        if File.exist?(log_file)
+          parser = Parser.new(log_file)
+          parser.table_names.each { |table| f.puts table }
+        else
+          f = nil
+        end
       end
     end
 

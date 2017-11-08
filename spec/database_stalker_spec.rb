@@ -20,7 +20,17 @@ describe DatabaseStalker do
         allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
         expect(table_names_from_log(test_log_path)).to be_empty
-        sleep(2)
+        simulate_test_process_dies
+      end
+    end
+
+    context 'test.log do not exist' do
+      it do
+        allow(Process).to receive(:ppid).and_return(1)
+        described_class.start(test_log_path, table_log_path)
+        simulate_test_process_dies
+        expect(File.exist?(test_log_path)).to be_falsy
+        expect(table_names_from_log(table_log_path)).to be_empty
       end
     end
 
