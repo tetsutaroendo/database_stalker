@@ -6,6 +6,7 @@ module DatabaseStalker
   class  << self
 
     def start(log_file, table_log_file)
+      File.open(log_file,'w'){ |f| f = nil }
       Process.fork do
         watch_test_process
         save_stalked_tables(log_file, table_log_file)

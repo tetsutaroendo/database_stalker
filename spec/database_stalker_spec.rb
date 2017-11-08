@@ -14,6 +14,16 @@ describe DatabaseStalker do
     let(:test_log_path) { 'spec/fixture/test.log' }
     let(:table_log_path) { 'spec/fixture/table.log' }
 
+    context 'test log already has some data' do
+      it do
+        write_file(test_log_path, 'some data')
+        allow(Process).to receive(:ppid).and_return(1)
+        described_class.start(test_log_path, table_log_path)
+        expect(table_names_from_log(test_log_path)).to be_empty
+        sleep(2)
+      end
+    end
+
     context 'mocking test process' do
       it do
         allow(Process).to receive(:ppid).and_return(1)
