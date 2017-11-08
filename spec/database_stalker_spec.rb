@@ -27,13 +27,13 @@ describe DatabaseStalker do
     end
 
     it do
-      Process.daemon do
+      Process.fork do
         described_class.start(test_log_path, table_log_path)
         log = <<-EOS
   [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
         EOS
         simulate_db_operation(test_log_path, log)
-        #exit(false) # simulate test process dies
+        $stderr = File.open("/dev/null", "w")
         crash # simulate test process dies
       end
       sleep(2)
