@@ -11,6 +11,6 @@ class DatabaseStalker::Parser
         tables << matched[1] unless matched.nil?
       end
     end
-    tables
+    tables.uniq
   end
 end
