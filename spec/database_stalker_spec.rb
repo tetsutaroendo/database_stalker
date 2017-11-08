@@ -19,7 +19,7 @@ describe DatabaseStalker do
         write_file(test_log_path, 'some data')
         allow(Process).to receive(:ppid).and_return(1)
         described_class.start(test_log_path, table_log_path)
-        expect(table_names_from_log(test_log_path)).to be_empty
+        expect(read_file(test_log_path)).to be_empty
         simulate_test_process_dies
       end
     end
@@ -72,14 +72,18 @@ describe DatabaseStalker do
       write_file(log_path, log)
     end
 
-    def table_names_from_log(log_path)
+    def read_file(file_path)
       result = []
-      File.open(log_path, 'r') do |f|
+      File.open(file_path, 'r') do |f|
         f.each_line do |line|
           result << line.strip
         end
       end
       result
+    end
+
+    def table_names_from_log(log_path)
+      read_file(log_path)
     end
 
     def simulate_test_process_dies
