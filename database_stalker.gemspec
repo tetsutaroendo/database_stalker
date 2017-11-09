@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["tetsutaroendo"]
   spec.email         = ["tetsutaro.endo@gmail.com"]
 
-  spec.summary       = "Detect inserted tables from the log."
-  spec.description   = "Detect inserted tables from the log."
+  spec.summary       = "This module detects table names which is inserted by your automated tests."
+  spec.description   = "This module detects table names which is inserted by your automated tests."
   #spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
