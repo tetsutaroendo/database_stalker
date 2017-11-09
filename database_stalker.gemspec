@@ -6,11 +6,11 @@ require 'database_stalker/version'
 Gem::Specification.new do |spec|
   spec.name          = "database_stalker"
   spec.version       = DatabaseStalker::VERSION
-  spec.authors       = ["Tetsutaro Endo"]
+  spec.authors       = ["tetsutaroendo"]
   spec.email         = ["tetsutaro.endo@gmail.com"]
 
-  spec.summary       = "Detect inserted tables around the transaction of tests."
-  spec.description   = "Detect inserted tables around the transaction of tests."
+  spec.summary       = "Detect inserted tables from the log."
+  spec.description   = "Detect inserted tables from the log."
   #spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
