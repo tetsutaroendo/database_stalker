@@ -16,7 +16,7 @@ describe DatabaseStalker do
 
     describe 'read table names' do
       it do
-        write_file(table_log_path, 'table1\ntable2')
+        write_file(table_log_path, "table1\ntable2")
         expect(described_class.read_table_names(table_log_path)).to eq(['table1', 'table2'])
       end
     end
