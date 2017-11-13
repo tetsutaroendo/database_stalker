@@ -5,7 +5,7 @@ module DatabaseStalker
 
   class  << self
 
-    def start(log_file, table_log_file)
+    def start(log_file: 'log/test.log', table_log_file: 'log/table_names.log')
       clean_up_file(log_file) if File.exist?(log_file)
       Process.fork do
         watch_test_process
@@ -13,7 +13,7 @@ module DatabaseStalker
       end
     end
 
-    def read_table_names(table_log_file)
+    def read_table_names(table_log_file: 'log/table_names.log')
       return [] if not File.exist?(table_log_file)
       result = []
       File.open(table_log_file, 'r') do |f|

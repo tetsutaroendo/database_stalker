@@ -17,11 +17,11 @@ describe DatabaseStalker do
     describe 'read_table_names' do
       it do
         write_file(table_log_path, "table1\ntable2")
-        expect(described_class.read_table_names(table_log_path)).to eq(['table1', 'table2'])
+        expect(described_class.read_table_names(table_log_file: table_log_path)).to eq(['table1', 'table2'])
       end
 
       it do
-        expect(described_class.read_table_names(table_log_path)).to be_empty
+        expect(described_class.read_table_names(table_log_file: table_log_path)).to be_empty
       end
     end
 
@@ -29,7 +29,7 @@ describe DatabaseStalker do
       it do
         write_file(test_log_path, 'some data')
         allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(test_log_path, table_log_path)
+        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
         expect(read_file(test_log_path)).to be_empty
         simulate_test_process_dies
       end
@@ -38,17 +38,17 @@ describe DatabaseStalker do
     context 'test.log do not exist' do
       it do
         allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(test_log_path, table_log_path)
+        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
         simulate_test_process_dies
         expect(File.exist?(test_log_path)).to be_falsy
-        expect(described_class.read_table_names(table_log_path)).to be_empty
+        expect(described_class.read_table_names(table_log_file: table_log_path)).to be_empty
       end
     end
 
     context 'mocking test process' do
       it do
         allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(test_log_path, table_log_path)
+        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
         simulate_db_operation(test_log_path)
         simulate_test_process_dies
         expect(File.exists?(table_log_path)).to be_truthy
@@ -58,7 +58,7 @@ describe DatabaseStalker do
     context 'simulate test process' do
       it do
         Process.fork do
-          described_class.start(test_log_path, table_log_path)
+          described_class.start(log_file: test_log_path, table_log_file: table_log_path)
           simulate_db_operation(test_log_path)
           $stderr = File.open("/dev/null", "w")
           crash # simulate test process dies
