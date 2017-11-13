@@ -41,7 +41,7 @@ describe DatabaseStalker do
         described_class.start(test_log_path, table_log_path)
         simulate_test_process_dies
         expect(File.exist?(test_log_path)).to be_falsy
-        expect(table_names_from_log(table_log_path)).to be_empty
+        expect(described_class.read_table_names(table_log_path)).to be_empty
       end
     end
 
@@ -91,10 +91,6 @@ describe DatabaseStalker do
         end
       end
       result
-    end
-
-    def table_names_from_log(log_path)
-      read_file(log_path)
     end
 
     def simulate_test_process_dies
