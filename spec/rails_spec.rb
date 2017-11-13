@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'open3'
 
-describe 'collaboratation with rails' do
+xdescribe 'collaboratation with rails' do
   before { clean_up_file(path_to_tables_log) }
 
   let(:current_directory) { Dir.pwd }

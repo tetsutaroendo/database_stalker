@@ -3,14 +3,28 @@ require "database_stalker/parser"
 
 module DatabaseStalker
 
+  DEFAULT_LOG_FILE = 'log/test.log'
+  DEFAULT_TABLE_LOG_FILE = 'log/table_names.log'
+
   class  << self
 
-    def start(log_file, table_log_file)
+    def start(log_file: DEFAULT_LOG_FILE, table_log_file: DEFAULT_TABLE_LOG_FILE)
       clean_up_file(log_file) if File.exist?(log_file)
       Process.fork do
         watch_test_process
         save_stalked_tables(log_file, table_log_file)
       end
+    end
+
+    def read_table_names(table_log_file: DEFAULT_TABLE_LOG_FILE)
+      return [] if not File.exist?(table_log_file)
+      result = []
+      File.open(table_log_file, 'r') do |f|
+        f.each_line do |line|
+          result << line.strip
+        end
+      end
+      result
     end
 
     def clean_up_file(file)
