@@ -13,6 +13,10 @@ module DatabaseStalker
       end
     end
 
+    def read_table_names(table_log_file)
+      ['table1', 'table2']
+    end
+
     def clean_up_file(file)
       File.open(file,'w'){ |f| f = nil }
     end

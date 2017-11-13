@@ -14,6 +14,13 @@ describe DatabaseStalker do
     let(:test_log_path) { 'spec/fixture/test.log' }
     let(:table_log_path) { 'spec/fixture/table.log' }
 
+    describe 'read table names' do
+      it do
+        write_file(table_log_path, 'table1\ntable2')
+        expect(described_class.read_table_names(table_log_path)).to eq(['table1', 'table2'])
+      end
+    end
+
     context 'test log already has some data' do
       it do
         write_file(test_log_path, 'some data')
