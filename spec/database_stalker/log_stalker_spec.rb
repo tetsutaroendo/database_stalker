@@ -1,16 +1,22 @@
 require 'spec_helper'
+require 'logger'
 require 'database_stalker/log_stalker'
 
 module DatabaseStalker
   describe LogStalker do
     before do
+      described_class.kill_all_stalker
       clean_up_file(stalked_file_path)
       clean_up_file(stalking_result_path)
     end
 
     let(:stalked_file_path) { 'spec/fixture/stalked.log' }
     let(:stalking_result_path) { 'spec/fixture/stalked_copy.log' }
-    let(:logger) { open(stalked_file_path, 'a') }
+    let(:logger) {
+      logger = open(stalked_file_path, (File::WRONLY | File::APPEND | File::CREAT))
+      logger.sync = true
+      logger
+    }
 
     it do
       File.open(stalked_file_path, 'w') do |f|
@@ -22,14 +28,21 @@ module DatabaseStalker
       logger.write("log2\n")
       logger.write("log3\n")
       stalker.stop
-      result = []
-      File.open(stalking_result_path) do |file|
-        file.each_line do |line|
-          result << line
-        end
-      end
-      expect(result).to eq(["log1\n", "log2\n", "log3\n"])
+      expect(stalker.result).to eq(["log1\n", "log2\n", "log3\n"])
+      #result = []
+      #File.open(stalking_result_path) do |file|
+      #  file.each_line do |line|
+      #    result << line
+      #  end
+      #end
+      #expect(result).to eq(["log1\n", "log2\n", "log3\n"])
     end
-    after { logger.close }
+
+    after do
+      described_class.kill_all_stalker
+      logger.close
+      clean_up_file(stalked_file_path)
+      clean_up_file(stalking_result_path)
+    end
   end
 end
