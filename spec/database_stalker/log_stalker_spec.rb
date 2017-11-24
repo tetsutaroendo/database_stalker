@@ -29,13 +29,6 @@ module DatabaseStalker
       logger.write("log3\n")
       stalker.stop
       expect(stalker.result).to eq(["log1\n", "log2\n", "log3\n"])
-      #result = []
-      #File.open(stalking_result_path) do |file|
-      #  file.each_line do |line|
-      #    result << line
-      #  end
-      #end
-      #expect(result).to eq(["log1\n", "log2\n", "log3\n"])
     end
 
     after do
