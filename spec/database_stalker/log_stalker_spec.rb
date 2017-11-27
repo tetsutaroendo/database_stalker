@@ -5,9 +5,9 @@ require 'database_stalker/log_stalker'
 module DatabaseStalker
   describe LogStalker do
     before do
-      described_class.kill_all_stalker
       clean_up_file(stalked_file_path)
       clean_up_file(stalking_result_path)
+      kill_all_tail_process
     end
 
     let(:stalked_file_path) { 'spec/fixture/stalked.log' }
@@ -32,10 +32,10 @@ module DatabaseStalker
     end
 
     after do
-      described_class.kill_all_stalker
       logger.close
       clean_up_file(stalked_file_path)
       clean_up_file(stalking_result_path)
+      kill_all_tail_process
     end
   end
 end
