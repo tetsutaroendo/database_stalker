@@ -4,7 +4,7 @@ module DatabaseStalker::Util
 
   def runned_tail_pids
     pids = ''
-    IO.popen("ps -e | grep 'tail -f -n 0' | grep -v grep | awk '{print $1}'") do |io|
+    IO.popen("ps x | grep 'tail -f -n 0' | grep -v grep | awk '{print $1}'") do |io|
       while true
         buffer = io.gets
         break if buffer.nil?

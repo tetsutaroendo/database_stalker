@@ -2,8 +2,6 @@ require 'spec_helper'
 require 'database_stalker'
 
 describe 'use database_stakler' do
-  before :all do
-  end
 
   it do
     DatabaseStalker.set_up
