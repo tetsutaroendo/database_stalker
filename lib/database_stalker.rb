@@ -24,6 +24,7 @@ module DatabaseStalker
       @stalking_log_per_test = stalking_log_per_test
       @stalking_log_per_test_temporary = stalking_log_per_test_temporary
       File.delete(@stalking_log_per_test_temporary) if File.exist?(@stalking_log_per_test_temporary)
+      FileUtils.touch(@stalking_log_per_test_temporary)
     end
 
     def stalk
@@ -32,14 +33,14 @@ module DatabaseStalker
         log_stalker.run
         watch_test_process
         log_stalker.stop
-        appended_log = log_stalker.result
-        log = []
+        used_log = []
         File.open(@stalking_log_per_test_temporary, 'r') do |f|
           f.each_line do |line|
-            log << line
+            used_log << line
           end
         end
-        parser = Parser.new(appended_log.slice(log.size .. appended_log.size - 1))
+        all_log = log_stalker.result
+        parser = Parser.new(all_log.slice(used_log.size .. all_log.size - 1))
         File.open(@table_log, 'w') do |file|
           parser.table_names.each do |table_name|
             file.write("#{table_name}\n")
