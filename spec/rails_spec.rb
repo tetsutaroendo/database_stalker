@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'open3'
 require 'bundler'
 
-describe 'collaboratation with rails' do
+describe 'collaboration with rails' do
   before { clean_up_file(table_log_file) }
 
   let(:table_log_file) { 'rails_test/log/table_names.log' }
