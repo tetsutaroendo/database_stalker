@@ -10,7 +10,7 @@ module DatabaseStalker
 
     def run
       @runned_tails = Util.runned_tail_pids
-      spawn("tail -f -n 0 #{@stalked_file_path} >> #{@stalking_result_path}")
+      spawn("tail -f -n 0 #{@stalked_file_path} > #{@stalking_result_path}")
       wait_for_tail_process_runninng
     end
 
@@ -32,11 +32,6 @@ module DatabaseStalker
       result
     end
 
-    def self.kill_all_stalker
-      Util.runned_tail_pids.each do |pid|
-        Process.kill('KILL', pid)
-      end
-    end
 
     private
 
