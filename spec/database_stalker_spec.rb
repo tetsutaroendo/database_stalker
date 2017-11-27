@@ -3,22 +3,12 @@ require 'database_stalker'
 
 describe DatabaseStalker do
   before do
-    clean_up_file(test_log)
-    clean_up_file(table_log)
-    clean_up_file(stalking_log)
-    clean_up_file(stalking_log_per_test)
-    clean_up_file(stalking_log_per_test_temporary)
-    kill_all_tail_process
+    clean_up
     set_up_previous_test_log
   end
 
   after do
-    clean_up_file(test_log)
-    clean_up_file(table_log)
-    clean_up_file(stalking_log)
-    clean_up_file(stalking_log_per_test)
-    clean_up_file(stalking_log_per_test_temporary)
-    kill_all_tail_process
+    clean_up
   end
 
   let(:test_log) { 'spec/fixture/test.log' }
@@ -29,25 +19,25 @@ describe DatabaseStalker do
 
   describe 'table name extraction in test process' do
     context 'test process is crash' do
-      it '' do
+      it do
         fork do
           $stderr = File.open("/dev/null", "w")
           logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
           logger.sync = true
           described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
           described_class.stalk
+          logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
           logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-          logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
           logger.close
           crash # simulate test process dies
         end
-        sleep(1)
+        wait_for_test_process
         described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-        expect(described_class.table_names).to eq(['example2', 'example3'])
+        expect(described_class.table_names).to eq(['example1', 'example2'])
       end
     end
 
-    context 'with per test'
+  context 'with per test'
     it 'can extract table name before notify_table_deletion was called' do
       fork do
         $stderr = File.open("/dev/null", "w")
@@ -56,17 +46,17 @@ describe DatabaseStalker do
         described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
         described_class.stalk
         described_class.stalk_per_test
-        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
         described_class.table_names_per_test
         described_class.notify_table_deletion
-        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example4` (`id`) VALUES (1)\n")
+
+        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
         logger.close
         crash # simulate test process dies
       end
-      sleep(1)
+      wait_for_test_process
       described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-      expect(described_class.table_names).to eq(['example4'])
+      expect(described_class.table_names).to eq(['example2'])
     end
   end
 
@@ -76,10 +66,10 @@ describe DatabaseStalker do
       logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
       logger.sync = true
       described_class.stalk_per_test
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
       logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
       logger.close
-      expect(described_class.table_names_per_test).to eq(['example2', 'example3'])
+      expect(described_class.table_names_per_test).to eq(['example1', 'example2'])
     end
 
     it 'does not include previous table name' do
@@ -88,22 +78,35 @@ describe DatabaseStalker do
       logger.sync = true
 
       described_class.stalk_per_test
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
       described_class.table_names_per_test
 
       described_class.stalk_per_test
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
       logger.close
-      expect(described_class.table_names_per_test).to eq(['example3'])
+      expect(described_class.table_names_per_test).to eq(['example2'])
     end
   end
 
   private
 
+    def wait_for_test_process
+      sleep(1)
+    end
+
+    def clean_up
+      clean_up_file(test_log)
+      clean_up_file(table_log)
+      clean_up_file(stalking_log)
+      clean_up_file(stalking_log_per_test)
+      clean_up_file(stalking_log_per_test_temporary)
+      kill_all_tail_process
+    end
+
     def set_up_previous_test_log
       logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
       logger.sync = true
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example` (`id`) VALUES (1)\n")
       logger.close
     end
 end
