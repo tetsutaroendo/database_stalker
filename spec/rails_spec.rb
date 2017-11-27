@@ -1,25 +1,29 @@
 require 'spec_helper'
 require 'open3'
+require 'bundler'
 
 describe 'collaboratation with rails' do
-  #before { clean_up_file(path_to_tables_log) }
+  before { clean_up_file(table_log_file) }
 
-  let(:current_directory) { Dir.pwd }
-  #let(:path_to_tables_log) { './rails_test/log/table_names.log' }
-  let(:path_to_tables_log) { '/Users/shoichirokitano/projects/database_stalker/rails_test/log/table_names.log' }
+  let(:table_log_file) { 'rails_test/log/table_names.log' }
 
   it do
-    expect(File.exists?(path_to_tables_log)).to be_truthy
-    #execute_test_of_rails_application
-    #sleep(10)
-    #expect(File.exists?(path_to_tables_log)).to be_truthy
+    execute_test_of_rails_application
+    sleep(2)
+    DatabaseStalker.set_up(table_log: table_log_file, stalking_log_per_test_temporary: 'dummy')
+    expect(DatabaseStalker.table_names).to match_array(['sample3s'])
   end
 
-  #after { clean_up_file(path_to_tables_log) }
+  after do
+    clean_up_file(table_log_file)
+    clean_up_file('dummy')
+  end
 
   private
 
     def execute_test_of_rails_application
-      Open3.capture3("cd rails_test && bundle exec rspec -I../lib spec/database_stalker_usage_spec.rb")
+      Bundler.with_clean_env do
+        Open3.capture3("cd rails_test && bundle exec rspec -I../lib spec/database_stalker_usage_spec.rb")
+      end
     end
 end
