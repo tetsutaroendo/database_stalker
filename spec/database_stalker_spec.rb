@@ -1,103 +1,99 @@
-require "spec_helper"
+require 'spec_helper'
+require 'database_stalker'
 
 describe DatabaseStalker do
-  context 'version' do
-    it { expect(DatabaseStalker::VERSION).not_to be nil }
+  before do
+    clean_up_file(test_log)
+    clean_up_file(table_log)
+    clean_up_file(stalking_log)
+    clean_up_file(stalking_log_per_test)
+    clean_up_file(stalking_log_per_test_temporary)
+    kill_all_tail_process
+    set_up_previous_test_log
   end
 
-  describe 'functions' do
-    before do
-      clean_up_file(test_log_path)
-      clean_up_file(table_log_path)
+  after do
+    clean_up_file(test_log)
+    clean_up_file(table_log)
+    clean_up_file(stalking_log)
+    clean_up_file(stalking_log_per_test)
+    clean_up_file(stalking_log_per_test_temporary)
+    kill_all_tail_process
+  end
+
+  let(:test_log) { 'spec/fixture/test.log' }
+  let(:table_log) { 'spec/fixture/table.log' }
+  let(:stalking_log) { 'spec/fixture/stalked_copy.log' }
+  let(:stalking_log_per_test) { 'spec/fixture/stalked_copy_per_test.log' }
+  let(:stalking_log_per_test_temporary) { 'spec/fixture/stalked_copy_per_test_temporary.log' }
+
+  it do
+    fork do
+      $stderr = File.open("/dev/null", "w")
+      logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+      logger.sync = true
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      described_class.stalk
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+      logger.close
+      crash # simulate test process dies
     end
+    sleep(10)
+    described_class.set_up(test_log: test_log, table_log: table_log)
+    expect(described_class.table_names).to eq(['example2', 'example3'])
+  end
 
-    let(:test_log_path) { 'spec/fixture/test.log' }
-    let(:table_log_path) { 'spec/fixture/table.log' }
-
-    describe 'read_table_names' do
-      it do
-        write_file(table_log_path, "table1\ntable2")
-        expect(described_class.read_table_names(table_log_file: table_log_path)).to eq(['table1', 'table2'])
-      end
-
-      it do
-        expect(described_class.read_table_names(table_log_file: table_log_path)).to be_empty
-      end
+  it do
+    fork do
+      $stderr = File.open("/dev/null", "w")
+      logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+      logger.sync = true
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      described_class.stalk
+      described_class.stalk_per_test
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+      described_class.table_names_per_test
+      described_class.notify_table_deletion
+      logger.close
     end
+    sleep(10)
+    described_class.set_up(test_log: test_log, table_log: table_log)
+    expect(described_class.table_names).to eq([])
+  end
 
-    context 'test log already has some data' do
-      it do
-        write_file(test_log_path, 'some data')
-        allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
-        expect(read_file(test_log_path)).to be_empty
-        simulate_test_process_dies
-      end
-    end
+  it do
+    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test: stalking_log_per_test)
+    logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+    logger.sync = true
+    described_class.stalk_per_test
+    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+    logger.close
+    expect(described_class.table_names_per_test).to eq(['example2', 'example3'])
+  end
 
-    context 'test.log do not exist' do
-      it do
-        allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
-        simulate_test_process_dies
-        expect(File.exist?(test_log_path)).to be_falsy
-        expect(described_class.read_table_names(table_log_file: table_log_path)).to be_empty
-      end
-    end
+  it do
+    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test: stalking_log_per_test)
+    logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+    logger.sync = true
+    described_class.stalk_per_test
+    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+    described_class.table_names_per_test
 
-    context 'mocking test process' do
-      it do
-        allow(Process).to receive(:ppid).and_return(1)
-        described_class.start(log_file: test_log_path, table_log_file: table_log_path)
-        simulate_db_operation(test_log_path)
-        simulate_test_process_dies
-        expect(File.exists?(table_log_path)).to be_truthy
-      end
-    end
-
-    context 'simulate test process' do
-      it do
-        Process.fork do
-          described_class.start(log_file: test_log_path, table_log_file: table_log_path)
-          simulate_db_operation(test_log_path)
-          $stderr = File.open("/dev/null", "w")
-          crash # simulate test process dies
-        end
-        wait_test_process_simulation
-        expect(File.exists?(table_log_path)).to be_truthy
-      end
-    end
-
-    after do
-      clean_up_file(test_log_path)
-      clean_up_file(table_log_path)
-    end
+    described_class.stalk_per_test
+    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+    logger.close
+    expect(described_class.table_names_per_test).to eq(['example3'])
   end
 
   private
 
-    def simulate_db_operation(log_path)
-      log = <<-EOS
-  [1m[35mSQL (0.4ms)[0m  INSERT INTO `examples` (`id`) VALUES (1)
-      EOS
-      write_file(log_path, log)
-    end
-
-    def read_file(file_path)
-      result = []
-      File.open(file_path, 'r') do |f|
-        f.each_line do |line|
-          result << line.strip
-        end
-      end
-      result
-    end
-
-    def simulate_test_process_dies
-      sleep(2)
-    end
-
-    def wait_test_process_simulation
-      sleep(2)
+    def set_up_previous_test_log
+      logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+      logger.sync = true
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
+      logger.close
     end
 end
