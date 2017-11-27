@@ -24,7 +24,8 @@ describe DatabaseStalker do
           $stderr = File.open("/dev/null", "w")
           logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
           logger.sync = true
-          described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+          set_up_tested_class
+          #described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test: stalking_log_per_test, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
           described_class.stalk
           logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
           logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
@@ -32,7 +33,8 @@ describe DatabaseStalker do
           crash # simulate test process dies
         end
         wait_for_test_process
-        described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+        #described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+        set_up_tested_class
         expect(described_class.table_names).to eq(['example1', 'example2'])
       end
     end
@@ -43,7 +45,7 @@ describe DatabaseStalker do
         $stderr = File.open("/dev/null", "w")
         logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
         logger.sync = true
-        described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+        set_up_tested_class
         described_class.stalk
         described_class.stalk_per_test
         logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
@@ -55,14 +57,14 @@ describe DatabaseStalker do
         crash # simulate test process dies
       end
       wait_for_test_process
-      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      set_up_tested_class
       expect(described_class.table_names).to eq(['example2'])
     end
   end
 
   describe 'table name extraction per test method' do
     it do
-      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      set_up_tested_class
       logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
       logger.sync = true
       described_class.stalk_per_test
@@ -73,7 +75,7 @@ describe DatabaseStalker do
     end
 
     it 'does not include previous table name' do
-      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      set_up_tested_class
       logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
       logger.sync = true
 
@@ -89,6 +91,10 @@ describe DatabaseStalker do
   end
 
   private
+
+    def set_up_tested_class
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test: stalking_log_per_test, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+    end
 
     def wait_for_test_process
       sleep(1)

@@ -15,7 +15,7 @@ module DatabaseStalker
     def set_up(
       test_log: DEFAULT_LOG_FILE,
       table_log: DEFAULT_TABLE_LOG_FILE,
-      stalking_log: DEFAULT_TABLE_LOG_FILE,
+      stalking_log: DEFAULT_STALKING_LOG_FILE,
       stalking_log_per_test: DEFAULT_STALKING_LOG_PER_TEST_FILE,
       stalking_log_per_test_temporary: DEFAULT_STALKING_LOG_PER_TEST_TEMPORARY_FILE)
       @test_log = test_log
@@ -65,7 +65,7 @@ module DatabaseStalker
     end
 
     def stalk_per_test
-      @log_stalker = LogStalker.new(@test_log, @stalking_log)
+      @log_stalker = LogStalker.new(@test_log, @stalking_log_per_test)
       @log_stalker.run
     end
 
