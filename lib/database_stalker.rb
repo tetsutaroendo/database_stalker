@@ -47,6 +47,10 @@ module DatabaseStalker
           end
         end
       end
+      wait_for_log_stalker
+    end
+
+    def wait_for_log_stalker
       sleep(0.1)
     end
 
@@ -88,5 +92,5 @@ module DatabaseStalker
     end
   end
 
-  private_class_method :watch_test_process
+  private_class_method :watch_test_process, :wait_for_log_stalker
 end
