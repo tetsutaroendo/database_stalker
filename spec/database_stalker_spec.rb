@@ -27,65 +27,75 @@ describe DatabaseStalker do
   let(:stalking_log_per_test) { 'spec/fixture/stalked_copy_per_test.log' }
   let(:stalking_log_per_test_temporary) { 'spec/fixture/stalked_copy_per_test_temporary.log' }
 
-  it do
-    fork do
-      $stderr = File.open("/dev/null", "w")
-      logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
-      logger.sync = true
-      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-      described_class.stalk
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
-      logger.close
-      crash # simulate test process dies
+  describe 'table name extraction in test process' do
+    context 'test process is crash' do
+      it '' do
+        fork do
+          $stderr = File.open("/dev/null", "w")
+          logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+          logger.sync = true
+          described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+          described_class.stalk
+          logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+          logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+          logger.close
+          crash # simulate test process dies
+        end
+        sleep(10)
+        described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+        expect(described_class.table_names).to eq(['example2', 'example3'])
+      end
     end
-    sleep(10)
-    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-    expect(described_class.table_names).to eq(['example2', 'example3'])
+
+    context 'with per test'
+    it 'can extract table name before notify_table_deletion was called' do
+      fork do
+        $stderr = File.open("/dev/null", "w")
+        logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+        logger.sync = true
+        described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+        described_class.stalk
+        described_class.stalk_per_test
+        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+        described_class.table_names_per_test
+        described_class.notify_table_deletion
+        logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example4` (`id`) VALUES (1)\n")
+        logger.close
+        crash # simulate test process dies
+      end
+      sleep(10)
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      expect(described_class.table_names).to eq(['example4'])
+    end
   end
 
-  it do
-    fork do
-      $stderr = File.open("/dev/null", "w")
+  describe 'table name extraction per test method' do
+    it do
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
       logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
       logger.sync = true
-      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-      described_class.stalk
       described_class.stalk_per_test
       logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
       logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
-      described_class.table_names_per_test
-      described_class.notify_table_deletion
       logger.close
+      expect(described_class.table_names_per_test).to eq(['example2', 'example3'])
     end
-    sleep(10)
-    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-    expect(described_class.table_names).to eq([])
-  end
 
-  it do
-    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-    logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
-    logger.sync = true
-    described_class.stalk_per_test
-    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
-    logger.close
-    expect(described_class.table_names_per_test).to eq(['example2', 'example3'])
-  end
+    it 'does not include previous table name' do
+      described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
+      logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
+      logger.sync = true
 
-  it do
-    described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
-    logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
-    logger.sync = true
-    described_class.stalk_per_test
-    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
-    described_class.table_names_per_test
+      described_class.stalk_per_test
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
+      described_class.table_names_per_test
 
-    described_class.stalk_per_test
-    logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
-    logger.close
-    expect(described_class.table_names_per_test).to eq(['example3'])
+      described_class.stalk_per_test
+      logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example3` (`id`) VALUES (1)\n")
+      logger.close
+      expect(described_class.table_names_per_test).to eq(['example3'])
+    end
   end
 
   private
