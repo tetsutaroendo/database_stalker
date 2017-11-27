@@ -25,7 +25,6 @@ describe DatabaseStalker do
           logger = open(test_log, (File::WRONLY | File::APPEND | File::CREAT))
           logger.sync = true
           set_up_tested_class
-          #described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test: stalking_log_per_test, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
           described_class.stalk
           logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example1` (`id`) VALUES (1)\n")
           logger.write("  [0m[0mSQL (0.0ms)[0m  INSERT INTO `example2` (`id`) VALUES (1)\n")
@@ -33,7 +32,6 @@ describe DatabaseStalker do
           crash # simulate test process dies
         end
         wait_for_test_process
-        #described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
         set_up_tested_class
         expect(described_class.table_names).to eq(['example1', 'example2'])
       end
