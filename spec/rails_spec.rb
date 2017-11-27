@@ -10,10 +10,14 @@ describe 'collaboratation with rails' do
   it do
     execute_test_of_rails_application
     sleep(2)
-    expect(DatabaseStalker.read_table_names(table_log_file: table_log_file)).to match_array(['sample1s', 'sample2s', 'sample3s'])
+    DatabaseStalker.set_up(table_log: table_log_file, stalking_log_per_test_temporary: 'dummy')
+    expect(DatabaseStalker.table_names).to match_array(['sample3s'])
   end
 
-  after { clean_up_file(table_log_file) }
+  after do
+    clean_up_file(table_log_file)
+    clean_up_file('dummy')
+  end
 
   private
 
