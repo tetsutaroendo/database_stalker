@@ -36,11 +36,11 @@ module DatabaseStalker
     private
 
       def wait_for_tail_process_runninng
-        sleep(2)
+        sleep(0.01)
       end
 
       def wait_for_tail_process_output
-        sleep(2)
+        sleep(0.01)
       end
   end
 end

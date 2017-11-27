@@ -47,7 +47,7 @@ module DatabaseStalker
           end
         end
       end
-      sleep(3)
+      sleep(0.1)
     end
 
     def table_names

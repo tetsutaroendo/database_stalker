@@ -41,7 +41,7 @@ describe DatabaseStalker do
           logger.close
           crash # simulate test process dies
         end
-        sleep(10)
+        sleep(1)
         described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
         expect(described_class.table_names).to eq(['example2', 'example3'])
       end
@@ -64,7 +64,7 @@ describe DatabaseStalker do
         logger.close
         crash # simulate test process dies
       end
-      sleep(10)
+      sleep(1)
       described_class.set_up(test_log: test_log, table_log: table_log, stalking_log: stalking_log, stalking_log_per_test_temporary: stalking_log_per_test_temporary)
       expect(described_class.table_names).to eq(['example4'])
     end
