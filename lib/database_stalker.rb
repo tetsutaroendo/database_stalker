@@ -49,6 +49,18 @@ module DatabaseStalker
       result
     end
 
+    def stalk_per_test
+      @log_stalker = LogStalker.new(@test_log, @stalking_log)
+      @log_stalker.run
+    end
+
+    def table_names_per_test
+      @log_stalker.stop
+      appended_log = @log_stalker.result
+      parser = Parser.new(appended_log)
+      parser.table_names
+    end
+
     def start(log_file: DEFAULT_LOG_FILE, table_log_file: DEFAULT_TABLE_LOG_FILE)
       clean_up_file(log_file) if File.exist?(log_file)
       Process.fork do
