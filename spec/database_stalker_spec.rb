@@ -86,6 +86,15 @@ describe DatabaseStalker do
       logger.close
       expect(described_class.table_names_per_test).to eq(['example2'])
     end
+
+    describe 'table name  acquirement' do
+      context 'table name log does not exist' do
+        it do
+          set_up_tested_class
+          expect(described_class.table_names).to be_empty
+        end
+      end
+    end
   end
 
   private

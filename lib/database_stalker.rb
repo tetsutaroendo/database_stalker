@@ -55,6 +55,7 @@ module DatabaseStalker
     end
 
     def table_names
+      return [] if not File.exists?(@table_log)
       result = []
       File.open(@table_log, 'r') do |f|
         f.each_line do |line|
